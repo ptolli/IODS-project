@@ -1,4 +1,9 @@
 
-# About the project
+# IODS - The most awesome course of the season :)
 
-*Write a short description about the course and add a link to your github repository here. This is an R markdown (.Rmd) file so you can use R markdown syntax. See the 'Useful links' page in the mooc area (chapter 1) for instructions.*
+Introduction to open data science is a new exciting course. I am thrilled to take it. And also a bit scared - is this going to be super-duper difficult?
+My brand new GitHub account can be found: https://github.com/ptolli/IODS-project
+
+```{r eval=FALSE}
+Data science is cool :)
+```
