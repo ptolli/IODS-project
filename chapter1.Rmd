@@ -5,5 +5,5 @@ Introduction to open data science is a new exciting course. I am thrilled to tak
 My brand new GitHub account can be found: https://github.com/ptolli/IODS-project
 
 ```{r eval=FALSE}
-Data science is cool :)
+Data science is cool :D
 ```

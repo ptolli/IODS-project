@@ -3,7 +3,7 @@ title: "IODS course project"
 author: "Pekka Tolli"
 output:
   html_document:
-    theme: united
+    theme: cosmo
     toc: true
     toc_depth: 2
     fig_caption: true
