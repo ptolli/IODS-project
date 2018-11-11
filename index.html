@@ -146,26 +146,40 @@ $(document).ready(function () {
 <div id="TOC">
 <ul>
 <li><a href="#iods---the-most-awesome-course-of-the-season">IODS - The most awesome course of the season :)</a></li>
-<li><a href="#insert-chapter-2-title-here">Insert chapter 2 title here</a></li>
+<li><a href="#second-week-exerices---when-the-stuff-is-getting-real">Second week exerices - when the stuff is getting real</a><ul>
+<li><a href="#data-wrangling">Data wrangling</a></li>
+<li><a href="#data-analysis-part">Data analysis part</a></li>
+</ul></li>
 </ul>
 </div>
 
 <hr />
 <div id="iods---the-most-awesome-course-of-the-season" class="section level1">
 <h1>IODS - The most awesome course of the season :)</h1>
-<p>Introduction to open data science is a new exciting course. I am thrilled to take it. And also a bit scared - is this going to be super-duper difficult? My brand new GitHub account can be found: <a href="https://github.com/ptolli/IODS-project" class="uri">https://github.com/ptolli/IODS-project</a></p>
+<p>Introduction to open data science is a new exciting course. I am thrilled to take it. My brand new GitHub account can be found: <a href="https://ptolli.github.io/IODS-project/" class="uri">https://ptolli.github.io/IODS-project/</a></p>
+<p>The first week exercise was nice an easy. Next week it will probably be a bit more hard work</p>
 <pre class="r"><code>Data science is cool :D</code></pre>
 <hr />
 </div>
-<div id="insert-chapter-2-title-here" class="section level1">
-<h1>Insert chapter 2 title here</h1>
-<p><em>Describe the work you have done this week and summarize your learning.</em></p>
-<ul>
-<li>Describe your work and results clearly.</li>
-<li>Assume the reader has an introductory course level understanding of writing and reading R code as well as statistical methods</li>
-<li>Assume the reader has no previous knowledge of your data or the more advanced methods you are using</li>
-</ul>
+<div id="second-week-exerices---when-the-stuff-is-getting-real" class="section level1">
+<h1>Second week exerices - when the stuff is getting real</h1>
+<p>The second week exercise was quite a bit more demanding than the first one. However, the Data Camp stuff gave a great starting point and just following their logic it was quite nice and clear to do the data wrangling and analysis</p>
+<div id="data-wrangling" class="section level2">
+<h2>Data wrangling</h2>
+<p>First I read learning2014 data from <a href="http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS3-data.txt" class="uri">http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS3-data.txt</a> into R and explore the data set with basic characteristics such as str and dim</p>
+<p>I created a subset from the master data including variables gender, age, attitude, deep, stra, surf and points by combining questions in the learning2014 data, as defined in the datacamp exercises.</p>
+<p>Then i saved the subset as data2.csv</p>
+</div>
+<div id="data-analysis-part" class="section level2">
+<h2>Data analysis part</h2>
+<p>First I download the my new dataset “data2” to R and checked its structure.</p>
+<p>The i put together a graphical overview of the data and with summaries of the variables + short descriptions of the outputs, commenting on the varibles and their relationships</p>
+<p>I created a linear regrssion model with three variables. For that I took three variables with highest correlation with “points” variable (stra, surf and attitude). I examided the summary of the model and interpreted the results. It appeared variable surf did not have statistically significant relationship with the dependent variable, so i omitted that and created a new model with two remaining variables.</p>
+<p>With the new model (model2), it appears that studying attitude and strategic approach explain around 13.5% of the variation of points. Based on the model, the points can be estimated by having 0.38 times attitude + 1.934 times the strategic approach scores + 2.67 (intercept)</p>
+<p>Last I produced some nice diagnostic plots: Residuals vs Fitted values, Normal QQ-plot and Residuals vs Leverage.</p>
+<p>Nice stuff :)</p>
 <hr />
+</div>
 </div>
 
 

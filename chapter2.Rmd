@@ -1,7 +1,31 @@
-# Insert chapter 2 title here
+# Second week exerices - when the stuff is getting real
 
-*Describe the work you have done this week and summarize your learning.*
+The second week exercise was quite a bit more demanding than the first one. However, the Data Camp stuff gave a great starting point and just following their logic it was quite nice and clear to do the data wrangling and analysis
 
-- Describe your work and results clearly. 
-- Assume the reader has an introductory course level understanding of writing and reading R code as well as statistical methods
-- Assume the reader has no previous knowledge of your data or the more advanced methods you are using  
+
+
+```{r eval=FALSE}
+Here is my second week r-script: https://github.com/ptolli/IODS-project/blob/master/Data/Week2.R
+```
+
+
+## Data wrangling
+First I read learning2014 data from http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS3-data.txt into R and explore the data set with basic characteristics such as str and dim
+
+I created a subset from the master data including variables gender, age, attitude, deep, stra, surf and points by combining questions in the learning2014 data, as defined in the datacamp exercises.
+
+Then i saved the subset as data2.csv
+
+##Data analysis part
+First I download the my new dataset "data2" to  R and checked its structure. 
+
+The i put together a graphical overview of the data and  with summaries of the variables + short descriptions of the outputs, commenting on the varibles and their relationships 
+
+I created a linear regrssion model with three variables. For that I took three variables with highest correlation with "points" variable (stra, surf and attitude). I examided the summary of the model and interpreted the results. It appeared variable surf did not have statistically significant relationship with the dependent variable, so i omitted that and created a new model with two remaining variables. 
+
+With the new model (model2), it appears that studying attitude and strategic approach explain around 13.5% of the variation of points. Based on the model, the points can be estimated by having 0.38 times attitude + 1.934 times the strategic approach scores + 2.67 (intercept)
+
+Last I produced some nice diagnostic plots: Residuals vs Fitted values, Normal QQ-plot and Residuals vs Leverage.
+
+
+Nice stuff :)
