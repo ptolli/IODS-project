@@ -1,5 +1,6 @@
 
-# IODS - The most awesome course of the season :)
+# Week 1 - when the fun begins 
+##IODS - The most awesome course of the season :)
 
 Introduction to open data science is a new exciting course. I am thrilled to take it. 
 My brand new GitHub account can be found: https://ptolli.github.io/IODS-project/
