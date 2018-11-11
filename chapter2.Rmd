@@ -2,11 +2,8 @@
 
 The second week exercise was quite a bit more demanding than the first one. However, the Data Camp stuff gave a great starting point and just following their logic it was quite nice and clear to do the data wrangling and analysis
 
-
-
-```{r eval=FALSE}
 Here is my second week r-script: https://github.com/ptolli/IODS-project/blob/master/Data/Week2.R
-```
+and the data file: https://github.com/ptolli/IODS-project/blob/master/Data/data2
 
 
 ## Data wrangling
