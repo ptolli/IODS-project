@@ -1,0 +1,263 @@
+---
+title: "Chapter3"
+author: "Pekka Tolli"
+date: "17 November 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+```{r setup1, include=FALSE}
+library(dplyr)
+library(ggplot2)
+
+```
+
+
+#Week 3 - blood and tears with logistic regression
+##Data analysis - explaining high alcohol use of students with logistic regression model 
+
+On this week's exercise I'll explore the explaining variables for the student high use of alcohol. For that I'l apply logistic regression model
+The data of the exercise is from a real student data from Portugal. 
+
+You can find the data [here](http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/alc.txt) and the descriptions of the variables etc. from [here](https://archive.ics.uci.edu/ml/datasets/Student+Performance).
+
+## Part 1: Load the data set and explore its basics:
+
+```{r}
+alc_data <- read.table("C:/Users/pekka/Documents/GitHub/IODS-project/Data/alc_data.csv", sep=",", header=TRUE)
+str(alc_data)
+dim(alc_data)
+```
+
+We have data set with 36 variables and ~380 observations. Very nice :)
+
+
+## Part 2: Define the explaining variables:
+Let's choose four variables to see their relationship with alcohol consumption: 1. goout (going out with friends), 2. health (current health status), 
+3. absences - number of school absences and 4. sex (student's sex). 
+
+..and look a bit how they appear
+
+###Variable 1 - Going out
+
+```{r data1, include=FALSE}
+
+table(alc_data$goout, alc_data$high_use)
+
+goout_use <- c(prop.table(table(alc_data$goout, alc_data$high_use), margin=1)*100)
+```
+
+``` {r}
+prop.table(table(alc_data$goout, alc_data$high_use), margin=1)*100
+cor(alc_data$goout, alc_data$high_use)
+chisq.test(alc_data$goout, alc_data$high_use, correct=FALSE)
+```
+
+Based on the basic stats above, activity of going out seems to have strong positive correlation with alcohol usage.  
+
+```{r}
+
+goout_label <- c("v Low","Low","Med","High","V High")
+Alc_use <- c("Low use","High use")
+df <- expand.grid(goout_label, Alc_use)
+df$value <- round(goout_use, digits=0)
+g <- ggplot(df, aes(Var1, Var2)) + geom_point(aes(size = value), colour = "blue") + theme_bw() + xlab("") + ylab("")
+g + scale_size_continuous(range=c(10,30)) + geom_text(aes(label = value)) + ggtitle("Alc use vs. Going out activity")
+```
+The visual cross-tabulation shows there higher the outgoing activity is, the higher the share of high use students
+
+
+###Variable 2 - Health
+
+```{r}
+table(alc_data$health, alc_data$high_use)
+health_use <- c(prop.table(table(alc_data$health, alc_data$high_use), margin=1)*100)
+prop.table(table(alc_data$health, alc_data$high_use), margin=1)*100
+cor(alc_data$health, alc_data$high_use)
+chisq.test(alc_data$health, alc_data$high_use, correct=FALSE)
+```
+
+Based on the basic stats above, there seems to be a very weak link between the current health and high alcohol usage.  
+
+```{r}
+health_label <- c("v Bad","Bad","Med","Good","V Good")
+Alc_use <- c("Low use","High use")
+df <- expand.grid(health_label, Alc_use)
+df$value <- round(health_use, digits=0)
+
+g <- ggplot(df, aes(Var1, Var2)) + geom_point(aes(size = value), colour = "blue") + theme_bw() + xlab("") + ylab("")
+g + scale_size_continuous(range=c(10,30)) + geom_text(aes(label = value)) + ggtitle("Alc use vs. Health")
+```
+
+
+...which is also evident from the visualized cross-tabulation above
+
+
+###Variable 3 - absences
+
+```{r}
+table(alc_data$absences, alc_data$high_use)
+goout_use <- c(prop.table(table(alc_data$absences, alc_data$high_use), margin=1)*100)
+prop.table(table(alc_data$absences, alc_data$high_use), margin=1)*100
+cor(alc_data$absences, alc_data$high_use)
+```
+
+There is a medium/low correlation between absences and alcohol usage.
+
+```{r}
+boxplot(alc_data$absences, alc_data$high_use)
+```
+
+
+###Variable 4: sex
+
+```{r}
+table(alc_data$sex, alc_data$high_use)
+sex_use <- c(prop.table(table(alc_data$sex, alc_data$high_use), margin=1)*100)
+prop.table(table(alc_data$sex, alc_data$high_use), margin=1)*100
+chisq.test(alc_data$sex, alc_data$high_use, correct=FALSE)
+```
+
+It appears, the sex has strong relationship with the alcohol consumption, with hypotehesis: male students are more likely high-users. 
+Chi-squared test gives strong indication the distribution is not even. 
+
+```{r}
+sex_label <- c("Female","Male")
+ef <- expand.grid(sex_label, Alc_use)
+ef$value <- round(sex_use, digits=0)
+g <- ggplot(ef, aes(Var1, Var2)) + geom_point(aes(size = value), colour = "blue") + theme_bw() + xlab("") + ylab("")
+g + scale_size_continuous(range=c(10,30)) + geom_text(aes(label = value)) + ggtitle("Alc use vs. Sex")
+```
+
+###Let's summarize the two most impactful variables in boxplot to have another angle to our hypthesis.
+```{r}
+g1<-ggplot(alc_data, aes(x = high_use, y = goout, col = sex))
+g1 + geom_boxplot() + ylab("Go out") + ggtitle("Going out by alcohol consumption and sex")
+```
+
+overall, it looks some of my previous thinking get support from the data: sex and going out activity correlate with the high alcohol use. 
+In addition, absences have somewhat medium link with alcohol use. However, my fourth hypothesis is not that much supported: current health 
+does not have strong relationship with alcohol use. 
+
+
+
+
+## Part 3: Logistic model fitting 
+Now, fit the logistic model with the above selected variables 
+
+```{r}
+m <- glm(high_use ~ goout + health + absences + sex, data = alc_data, family = "binomial")
+```
+
+Let's examine the model
+```{r}
+summary(m)
+coef(m)
+```
+
+
+###Model summary - model 1
+Model summary tells us that the model three statistically higly significant (p-value <0.0001) variables (as thought above): sex, going out and absences. The variable going out is the most significant significance
+
+###Odds ratios and coefficients of model 1
+Let's explore  the odds ratios based on the coefficients:
+
+```{r}
+OR <- coef(m) %>% exp
+OR
+```
+
+It appears, the going out and sex (Male) have the strongest relationship out of the 4 explanining variable with the alcohol consumption. 
+The odds ratio of sex is 2.6 and odds ratio of going out is 2.1. The health has 1.1 odds ratio as well as abscences 1.1 meaning they 
+are quite insignificinat predictors of the alcohol consumption.
+
+###Confidence intervals of model 1
+```{r}
+CI<-confint(m) %>% exp
+CI
+```
+
+Going out conf. int is 1.7-2.7. SexM has very wide conf. int. with 1.6-4.4 given variables binary nature
+```{r data14, echo=FALSE}
+confint <-cbind(OR, CI)
+```
+
+###Better version of the model = model 2
+Create a new model by dropping the statistically insignificant variable:
+```{r}
+m2 <- glm(high_use ~ goout + absences + sex, data = alc_data, family = "binomial")
+summary(m2)
+coef(m2)
+```
+nice, now all coefficients are statistically significant, cool
+
+```{r}
+OR <- coef(m2) %>% exp
+OR
+CI<-confint(m2) %>% exp
+CI
+confint <-cbind(OR, CI)
+confint
+```
+It looks the odds ratios are quite close to the ones in the first model. That was expected because we omitted just one variable with low statististical significance. 
+Also the confidence intervals are close to the ones in the model1 
+
+
+### Predictions with the model2
+And now to testing the predictive power of my model: 
+```{r}
+probabilities <- predict(m2, type = "response")
+alc_data <- mutate(alc_data, probability = probabilities)
+alc_data <- mutate(alc_data, prediction = probability>0.5)
+table(high_use = alc_data$high_use, prediction = alc_data$prediction)
+
+g <- ggplot(alc_data, aes(x = probability, y = high_use, col = prediction))
+
+g + geom_point() + aes(col = prediction)
+```
+Based on the plotting, the model seems to be working fairly well. As stated above, it has a tendency to classify some high users to low users, i.e. false negative outcome. 
+
+
+### Tabulate the target variable versus the predictions
+```{r}
+round(table(high_use = alc_data$high_use, prediction = alc_data$prediction) %>% prop.table %>% addmargins, digits = 2)
+```
+
+It appears the model gives 79% of the observations right classification and to the rest 21% a wrong. 
+False negative appreas to be more likely error than false positive. 
+
+```{r}
+loss_func <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+```
+
+###Loss ratio and predictive power
+call loss_func to compute the average number of wrong predictions in the (training) data
+
+```{r}
+loss_func(class = alc_data$high_use, prob = alc_data$probability)
+```
+It appears, the model is fairly good in predicting the alcohol high use. Around 21% of the observations were incorrectly classified. 
+With systematic proportional guessing (stating all observations are low use), one could get around 70% right given the low-use proportion is 70%. 
+
+```{r}
+table(alc_data$high_use)
+```
+
+###Bonus: let's finally do the cross-validation. 
+```{r}
+library(boot)
+cv <- cv.glm(data = alc_data, cost = loss_func, glmfit = m2, K = 10)
+cv
+
+cv$delta[1]
+```
+With 10-fold cross-validation the prediction error is around 0.20-0.22. That is smaller than in the data camp exercise. Very nice
+
+##Yay!
