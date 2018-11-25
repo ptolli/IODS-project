@@ -1,0 +1,303 @@
+---
+title: "Chapter4"
+author: "Pekka Tolli"
+date: "23 November 2018"
+output: html_document
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+```{r include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(MASS)
+library(knitr)
+library(GGally)
+library(corrplot)
+
+```
+
+
+#Week 4 - total clusterfun
+##Data analysis
+
+On this week's exercise I'll explore the Boston crime data set from MASS library. I'll do cluster analysis of the data set. 
+
+
+## Part 1: Explore the basics of the dataset:
+
+```{r}
+str(Boston)
+dim(Boston)
+```
+
+We have data set with 14 variables and ~500 observations. 
+
+**Variables include:**  
+crim = per capita crime rate by town.  
+zn = proportion of residential land zoned for lots over 25,000 sq.ft.  
+indus = proportion of non-retail business acres per town.  
+chas = Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).  
+nox = nitrogen oxides concentration (parts per 10 million).  
+rm = average number of rooms per dwelling.  
+age = proportion of owner-occupied units built prior to 1940.  
+dis = weighted mean of distances to five Boston employment centres.  
+rad =  index of accessibility to radial highways.  
+tax = full-value property-tax rate per \$10,000.  
+ptratio = pupil-teacher ratio by town.  
+black = 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town.  
+lstat = lower status of the population (percent).  
+medv = median value of owner-occupied homes in \$1000s.  
+
+```{r}
+kable(summary(Boston), caption = " Summary of Boston data set")
+```
+
+
+```{r}
+ggplot(Boston, aes(x=crim)) + geom_histogram(aes(y=..density..), colour="black", fill="white")+  geom_density(alpha=.2, fill="#FF6666")
+```
+Crime rate is continuous variable with great majority at the low end with <1. The range is high with maximum value close to 90.
+
+```{r}
+ggplot(Boston, aes(x=zn)) + geom_histogram(aes(y=..density..), colour="black", fill="white")+  geom_density(alpha=.2, fill="#FF6666")
+```
+proportion of residential land zoned for lots is packed to the low end with median being 0. 
+
+```{r}
+ggplot(Boston, aes(x=indus)) + geom_histogram(aes(y=..density..), colour="black", fill="white")+  geom_density(alpha=.2, fill="#FF6666") 
+```
+proportion of non-retail business acres per town varies between 0-28 with median around 10. 
+
+```{r}
+ggplot(Boston, aes(x=chas)) + geom_histogram(aes(y=..density..), colour="black", fill="white")+  geom_density(alpha=.2, fill="#FF6666") 
+```
+chas is a dummy variable with >90% being 0 (not bounding to river) 
+
+
+```{r}
+ggplot(Boston, aes(x=nox)) + geom_histogram(aes(y=..density..), colour="black", fill="white")+  geom_density(alpha=.2, fill="#FF6666") 
+```
+nox distribution is spread out relatively more evenly than most of the other variables. median is around 0.6
+
+
+```{r}
+ggplot(Boston, aes(x=rm)) + geom_histogram(aes(y=..density..), colour="black", fill="white")+  geom_density(alpha=.2, fill="#FF6666") 
+```
+number of rooms appeas somewhat normally distributed with median close to 6. 
+
+
+```{r}
+ggplot(Boston, aes(x=age)) + geom_histogram(aes(y=..density..), colour="black", fill="white")+  geom_density(alpha=.2, fill="#FF6666") 
+```
+age is skewed to right, but otherwise fairly spread out between 0-100
+
+
+```{r}
+ggplot(Boston, aes(x=dis)) + geom_histogram(aes(y=..density..), colour="black", fill="white")+  geom_density(alpha=.2, fill="#FF6666") 
+```
+Distance from the employment center is typically less than 2.5 
+
+```{r}
+ggplot(Boston, aes(x=rad)) + geom_histogram(aes(y=..density..), colour="black", fill="white")+  geom_density(alpha=.2, fill="#FF6666") 
+```
+access to radial highway is two humped, accessibility is either very low or very high 
+
+```{r}
+ggplot(Boston, aes(x=tax)) + geom_histogram(aes(y=..density..), colour="black", fill="white")+  geom_density(alpha=.2, fill="#FF6666") 
+```
+property tax rate is mostly between 200-450 but significant amount is focused around 700 as well. 
+
+```{r}
+ggplot(Boston, aes(x=ptratio)) + geom_histogram(aes(y=..density..), colour="black", fill="white")+  geom_density(alpha=.2, fill="#FF6666")
+```
+pupupil-teacher ratio is between 15-25, most often being 20. 
+
+
+```{r}
+ggplot(Boston, aes(x=black)) + geom_histogram(aes(y=..density..), colour="black", fill="white")+  geom_density(alpha=.2, fill="#FF6666") 
+```
+
+adjusted black  proportion is highly concentrated around 400
+```{r}
+ggplot(Boston, aes(x=lstat)) + geom_histogram(aes(y=..density..), colour="black", fill="white")+  geom_density(alpha=.2, fill="#FF6666") 
+```
+lower status of population is mostly betweeen 0-30 median being around 11
+
+```{r}
+ggplot(Boston, aes(x=medv)) + geom_histogram(aes(y=..density..), colour="black", fill="white")+  geom_density(alpha=.2, fill="#FF6666") 
+```
+median value of owner-occupied homes is 0-50 median being 20. 
+
+
+### Summary of variables
+Let's then have a look on the relationships between the variables focusing on the crime rate which is of the specific interest of the analysis
+```{r}
+
+pairs(Boston)
+
+cor_matrix<-cor(Boston) %>%round(digits = 2)
+corrplot(cor_matrix, method="circle", cl.pos = "b", tl.pos = "d", tl.cex = 0.6)
+
+
+```
+
+It appears the crime rate has the highest correlation with i. index of accessibility to radial highways and ii. full-value property-tax rate per \$10,000.
+About the other variables, rad and tax rate are highly correlated whereas lstat and medv highly negatively correlated. The latter is understandable as the lower socioeconomical class is typicall connected with the price of the housing. Furthermore, nox and dis are negatively correlated as well as age and dis. Finally nox and industrial are positively correlated - which is obvious as industrial plants can often emit nitrogen oxides.
+
+###Linear regression: crime vs. rad and tax
+Simple regression sheds some light to the relationship between crime rate and two variables it is mosty significantly correlated. However, as the data is quite packed to the right the regular regression model is not particularly helpful.  
+
+````{r}
+p1 <- ggplot(Boston, aes(x = rad, y = crim))
+p2 <- p1 + geom_point() + geom_smooth(method = "lm")
+p3 <- p2 + ggtitle("Figure 1. Crime vs. radial highways")
+p3
+
+p1 <- ggplot(Boston, aes(x = tax, y = crim))
+p2 <- p1 + geom_point() + geom_smooth(method = "lm")
+p3 <- p2 + ggtitle("Figure 2. Crime vs. Tax rate")
+p3
+
+
+```
+
+## Part 2: Scale and classify the data set
+
+Let's scale the data to set the scene for the distance measurement and cluster analysis
+
+```{r}
+boston_scaled <-scale(Boston)
+kable(summary(boston_scaled), caption = " Summary of Scaled Boston data set")
+```
+As inteded the variables have now means of 0 and st.dev. of 1. The min and max values are scaled respectively. 
+
+
+###Categorized crime rate
+Lets then create a categorical variable of the crime rate in the Boston dataset (from the scaled crime rate). And lets also kill the old crime rate variable from the dataset.
+
+```{r}
+boston_scaled<-as.data.frame(boston_scaled)
+
+bins <- quantile(boston_scaled$crim)
+label<-c("low", "med_low", "med_high", "high")
+crime <- cut(boston_scaled$crim, breaks = bins, include.lowest = TRUE, label = label)
+table(crime)
+boston_scaled <- dplyr::select(boston_scaled, -crim)
+boston_scaled <- data.frame(boston_scaled, crime)
+
+```
+
+### Train and test set
+Now, divide the dataset to train and test sets, so that we have 80% of the data in the train set
+```{r}
+n <- nrow(boston_scaled)
+ind <- sample(n,  size = n * 0.8)
+train <- boston_scaled[ind,]
+test <- boston_scaled[-ind,]
+correct_classes <- test$crime
+```
+
+
+## Part 3: Linear disriminant analysis
+Let's then fit the linear discriminant analysis on the train set. Categorical crime rate is the target variable and all the other variables in the dataset as predictor variables.
+```{r}
+lda.fit <- lda(crime ~., data = train)
+lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
+  heads <- coef(x)
+  arrows(x0 = 0, y0 = 0, 
+         x1 = myscale * heads[,choices[1]], 
+         y1 = myscale * heads[,choices[2]], col=color, length = arrow_heads)
+  text(myscale * heads[,choices], labels = row.names(heads), 
+       cex = tex, col=color, pos=3)
+}
+classes <- as.numeric(train$crime)
+lda.fit
+```
+
+The model summary shows that the model explains well over 90% of the variance of the data. 
+
+And now a nice visualisation of the LDA: color by the group + arrows for directions and weights of the different explanatory variables.
+```{r}
+plot(lda.fit, dimen = 2, col = classes, pch = classes)
+lda.arrows(lda.fit, myscale = 2)
+
+```
+Based on the visualisation, it looks the variable rad has major impact to the classification.
+
+
+Next, test how well the LDA model works: First, kill the crime data from the test set. And then let's predict the classes with the LDA model on the test data.
+
+````{r}
+test <- boston_scaled[-ind,]
+correct_classes <- test$crime
+test <- dplyr::select(test, -crime)
+
+lda.pred <- predict(lda.fit, newdata = test)
+table(correct = correct_classes, predicted = lda.pred$class)
+
+
+````
+
+It apperas the LDA model with all variables predicts fairly well the crime rate. Both extremes fit well, with 22/24 high category cases correctly classified and 22/24 of the low. The middle categories appear more problematic (16/26 and 20/26). the model mixed between the two middle categories.  
+
+
+## Part 4 - clustering
+
+Now, lets load the Boston dataseta again and standardize it. Then calculate the distances between the observations with k-means algorithm. 
+
+````{r}
+summary(Boston)
+std_boston <-scale(Boston)
+summary(std_boston)
+dist <- dist(std_boston)
+head(dist)
+
+std_boston<-as.data.frame(std_boston)
+````
+
+And some nice visualization of the clusters.
+```{r}
+
+km <-kmeans(std_boston, centers = 2)
+pairs(std_boston, col = km$cluster)
+set.seed(123)
+k_max <- 10
+twcss <- sapply(1:k_max, function(k){kmeans(std_boston, k)$tot.withinss})
+qplot(x = 1:k_max, y = twcss, geom = 'line')
+````
+By looking the clusters, it appears they are formed in regards crime rate by splitting the observations to very low and all the else. Rad and tax seem to cluster well the data. 
+
+
+Let's check what is the optimal number of clusters. For that, let's calculate how the total of within cluster sum of squares (WCSS) changes when the number of cluster changes. The optimal number of clusters is when the WCSS drops significantly.
+```{r}
+km <-kmeans(std_boston, centers = 2)
+pairs(std_boston, col = km$cluster)
+
+````
+
+  As the twcss drops quickly around 2 the right number of clusters is 2. 
+
+```{r}
+pairs(std_boston[ ,c(1, 9:10)], col = km$cluster)
+
+````
+Quickly examining the clusters across crim, rad and tax it appears all high tax rate areas are in the same cluster with high crime rate. Same applies with the rad
+
+###Super-Bonus
+
+model_predictors <- dplyr::select(train, -crime)
+# check the dimensions
+dim(model_predictors)
+dim(lda.fit$scaling)
+class(model_predictors)
+# matrix multiplication
+matrix_product <- as.matrix(model_predictors) %*% lda.fit$scaling
+matrix_product <- as.data.frame(matrix_product)
+
+install.packages("plotly")
+library(plotly)
+plot_ly(x = matrix_product$LD1, y = matrix_product$LD2, z = matrix_product$LD3, type= 'scatter3d', mode='markers')
