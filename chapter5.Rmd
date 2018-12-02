@@ -1,0 +1,195 @@
+---
+title: "Chapter5"
+author: "Pekka Tolli"
+date: "2 December 2018"
+output: html_document
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+```{r include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(MASS)
+library(knitr)
+library(GGally)
+library(corrplot)
+
+```
+
+
+#Week 5 - When PCA and MCA had a cup of tea together
+
+On this week's exercise I'll explore the Human data set from  United Nations Development Programme. Given the data has multiple dimensios, I'll do dimensional reduction of the data set to make it more easily comprehensible. And at the end of the analysis I switch to drink few cups of tea over fabulous multiple correspondence analysis. 
+
+
+## Part 1 PCA: Explore the basics of the dataset:
+
+````{r}
+human <- read.csv("http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/human2.txt", stringsAsFactors = F)
+
+str(human)
+dim(human)
+summary(human)
+head(human)
+```
+
+We have data set with 8 variables and 155 observations. 
+
+**Variables include:**
+Country" = Country name  
+Edu2.FM" = Edu2.F / Edu2.M  
+Labo.FM" = Labo2.F / Labo2.M  
+Parli.F" = Percetange of female representatives in parliament  
+GNI" = Gross National Income per capita  
+Life.Exp" = Life expectancy at birth  
+Edu.Exp" = Expected years of schooling   
+Ado.Birth" = Adolescent birth rate  
+Mat.Mor" = Maternal mortality ratio  
+
+
+```{r}
+kable(summary(human), caption = " Summary of the Human data set")
+```
+  
+
+
+  Lets explore the data visually. First, with the classical ggpairs:
+
+```{r}
+ggpairs(human, mapping = aes(, alpha = 0.3), lower = list(combo = wrap("facethist", bins = 20)))
+
+```
+  
+  Looks like the variables are somewhat normally distributed with heavy skewness. Maternal mortality is the one with highest skeweness, with clear majority concentrating to the low values, indicating low mortality. Also gross national income per capita is heavily skewed to the left.   
+
+
+
+Then, let's look the correlation matrix:
+```{r}
+cor_matrix<-cor(human) %>%round(digits = 2)
+corrplot(cor_matrix, method="circle", cl.pos = "b", tl.pos = "d", tl.cex = 0.6)
+
+```
+  
+  Overall quite many of the variables are strongly correlated with each other. The highest positive correlations are between expected years of schooling and life expectancy. In addition, Maternal mortality ratio is highly positively correlated with Adolescent birth rate, which is quite obvious. In addition, ratio of female to male at least on the secondary education is highly correlated with expected education duration and life expectancy. 
+
+The highest negative correlations appear between maternal mortality and Life expectancy and Adolescent birth rate. 
+
+
+## Part 2 PCA: Principal component analysis
+  Lets perform principal component analysis on the not human data  
+
+
+````{r}
+pca_human <- prcomp(human)
+pca_human
+summary(pca_human)
+````
+  In the above output, it looks  the variability captured by the principal component PC1 is very high, close to 100%. For the rest only a fraction is left. Thus the PC1 appear to be pretty much the only component that matters.  
+  
+  Then lets draw a biplot of the principal component representation and the original variables
+
+````{r}
+biplot(pca_human, choices = 1:2, cex = c(0.1, 0.5), col = c("grey40", "deeppink2"))
+````
+
+Results are bit odd. It appears the GNI has clearly the most significant impact to the results as it has the highest numerical values of all variables. The feature of the PCA is tha it takes the unscaled values and high absolute variance as signal of higher importance. 
+
+Therefore, let's standardize the data and redo the analysis:
+````{r}
+human_std <- scale(human)
+pca_human_std <- prcomp(human_std)
+pca_human_std
+summary(pca_human_std)
+````
+
+Standardization seems to do the trick very well, now the variance capture is muche more plausibly spread out across different principal components. PC1 now covers 54%, PC2:16%, PC3:10%
+
+And now again the biplotting :)
+
+````{r}
+biplot(pca_human_std, cex = c(0.5, 0.8), col = c("grey40", "deeppink2"))
+````
+
+
+### Comparison and interpretation of the PCA results (analysis questions 3. and 4.)###
+
+With the standardized data the principal components and biplots are quite different compared to the nonstandardized data. That is due to the fact that the PCA interprets high absolute variance as signal of higher importance of that variable. Standardization removes that effect and as a result all variables are treated from equal basis. 
+
+**PC 1 interpretation**
+PC1 in the standardized dataset analysis consists primarily of Maternal Mortality, Adolescent birth rate, Life expectancy, Education expectancy and Female/male education ratio. That singifies that all these variables are highly correlated with each other and can be captured relatively well with the PC1 component. Maternal Mortality, Adolescent birth rate are negativel correlated with the rest of the PC1 components which is understandable. Higher mortality and higher adolescent birth rate typically indicate worse conditions of living.  
+I would summarize the PC1 captures the home and domestic well-being side of the human dataset. 
+
+**PC2 interpretation**
+PC2 consists of Pariliament female ratio and Labor force female ratio. These components are positively correlated. In addition, they are very little correlated with the components of PC1 - which is desired situation as it enables the model to capture maximuma amount of variability of the data. The PC2 component represents women participation in the public arena, i.e. politics and workforce.
+
+**Summary of PCA**
+All in all, the PCA indicates that the Human dataset can be quite efficiently summarized in two principal components. First one covering domestic well-being and the second representing politics and workforce equality. 
+
+Looking the actual countries in the plot, a few patterns emerge. First, countries with the highest GNI are on the left and the ones with the lowest GNI are on the right. In addition, among the high GNI countries there is group of Nordic countries with high PC2 value, i.e. high female participation in workforce and politics. Furthermore there are multiple countries with very low PC2 value but relatively high PC1 ("domestic well-being"). Finally, there is an interesting group of countries with relatively high PC2 but low PC1, e.g. Rwanda and Mozambique. Those have achieved high equality in female participation but lag still with GNI, education or life expectancy. 
+
+
+## Part 3 MCA: Tea time with multiple correspondence analysis
+
+Let's have some tea-data:
+install.packages("FactoMineR")
+
+````{r}
+library(FactoMineR)
+library(tidyr)
+data(tea)
+str(tea)
+dim(tea)
+head(tea)
+````
+
+
+Let's visualize the data, actually in two block as the data has quite many variables. 
+````{r}
+tea1 <- tea[1:18]
+gather(tea1) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar() + theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+tea2 <- tea[19:ncol(tea)]
+gather(tea2) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar() + theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+
+````
+
+
+Then let's do Multiple Correspondence Analysis on the part of the tea data. First, lets select select some interesting questions (columns) for the analysis: 
+
+````{r}
+keep_columns <- c("Tea", "How", "sugar", "effect.on.health", "friendliness")
+tea_time <- dplyr::select(tea, one_of(keep_columns))
+gather(tea_time) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar() + theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+````
+They are nicely summarized above with simple bar plots
+
+And then the actual multiple correspondence analysis
+````{r}
+mca <- MCA(tea_time, graph = FALSE)
+````
+
+  And the summary of the model:
+````{r}
+
+summary(mca)
+````
+
+
+And what we are really interested in is how the analysis looks visually:
+````{r}
+
+plot(mca, invisible=c("ind"), habillage="quali")
+plot(mca, invisible=c("quali.sup"), habillage="quali")
+
+````
+###MCA result interpretation 
+Dimension 1 captures 16.3% of the variability and Dim2 15.1% of variability. 
+
+Drinkers who prefer tea with milk are more often considering also tea's effect on health and friendliness. The green tea drinkers are quite different from black tea drinkers as the observations are plotted far away from each other. "other" tea drinkers are very distant from any other - maybe they drink some very special kind of tea in very special way. 
+
+Furthermore, lemon, sugar and Earl Greay are close to each other. Perhaps the drinkers of that sort share somewhat similar behavior.
+
